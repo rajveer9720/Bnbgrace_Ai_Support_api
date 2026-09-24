@@ -7,7 +7,7 @@ import { AppService } from './app.service.js';
 import { AuthModule } from './auth/auth.module.js';
 import { KnowledgeModule } from './knowledge/knowledge.module.js';
 import { QueryModule } from './query/query.module.js';
-import { OllamaModule } from './ollama/ollama.module.js';
+import { LlmModule } from './llm/llm.module.js';
 import { getDatabaseConfig } from './common/app.config.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
@@ -21,7 +21,8 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => getDatabaseConfig(configService),
+      useFactory: (configService: ConfigService) =>
+        getDatabaseConfig(configService),
     }),
     ObserveModule.forRoot({
       appKey: 'YOUR_APP_KEY',
@@ -31,7 +32,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     AuthModule,
     KnowledgeModule,
     QueryModule,
-    OllamaModule,
+    LlmModule,
   ],
   controllers: [AppController],
   providers: [AppService],

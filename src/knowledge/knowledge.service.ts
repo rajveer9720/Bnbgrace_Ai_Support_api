@@ -1,22 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import axios from 'axios';
-import { ConfigService } from '@nestjs/config';
+import { LlmService } from '../llm/llm.service.js';
 
 @Injectable()
 export class KnowledgeService {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly llmService: LlmService) {}
 
   async getKnowledgeBase() {
-    const ollamaUrl = this.configService.get<string>('OLLAMA_URL') ?? 'http://localhost:11434';
-
-    try {
-      const response = await axios.get(`${ollamaUrl}/api/tags`);
-      return response.data;
-    } catch {
-      return {
-        models: [],
-        message: 'Ollama not reachable',
-      };
-    }
+    return this.llmService.getModels();
   }
 }

@@ -1,11 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import axios from 'axios';
-import { ConfigService } from '@nestjs/config';
-  import { InjectRepository } from '@nestjs/typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { KnowledgeChunk } from '../knowledge/knowledge-chunk.entity.js';
 import { QueryLog } from './query-log.entity.js';
-import { OllamaService } from '../ollama/ollama.service.js';
+import { LlmService } from '../llm/llm.service.js';
 import { getTopMatches } from './cosine-similarity.util.js';
 
 const FALLBACK_REPLY = 'This query requires supervisor verification.';
@@ -14,8 +12,7 @@ const SIMILARITY_THRESHOLD = 0.75;
 @Injectable()
 export class QueryService {
   constructor(
-    private readonly configService: ConfigService,
-    private readonly ollamaService: OllamaService,
+    private readonly llmService: LlmService,
     @InjectRepository(KnowledgeChunk)
     private readonly knowledgeChunkRepository: Repository<KnowledgeChunk>,
     @InjectRepository(QueryLog)
@@ -23,27 +20,15 @@ export class QueryService {
   ) {}
 
   async ask(prompt: string) {
-    const ollamaUrl = this.configService.get<string>('OLLAMA_URL') ?? 'http://localhost:11434';
-
-    const response = await axios.post(`${ollamaUrl}/api/generate`, {
-      model: 'llama3.2',
-      prompt,
-      stream: false,
-    });
-
     return {
-      answer: response.data.response,
+      answer: await this.llmService.generateReply(prompt),
     };
   }
 
   async generateReply(question: string, userId: number) {
-    const questionEmbedding = await this.ollamaService.getEmbedding(question);
+    const questionEmbedding = await this.llmService.getEmbedding(question);
     const chunks = await this.knowledgeChunkRepository.find();
-    const topMatches = getTopMatches(
-      questionEmbedding,
-      chunks as unknown as Array<{ embedding: number[] | null } & KnowledgeChunk>,
-      5,
-    );
+    const topMatches = getTopMatches(questionEmbedding, chunks, 5);
     const bestScore = topMatches[0]?.score ?? 0;
 
     if (bestScore < SIMILARITY_THRESHOLD) {
@@ -63,7 +48,8 @@ export class QueryService {
 
     const context = topMatches.map((match) => match.chunk.content).join('\n\n');
     const prompt = `Answer ONLY using the context below. If insufficient, say exactly 'This query requires supervisor verification.'\n\nContext:\n${context}\n\nQuestion: ${question}`;
-    const reply = await this.ollamaService.generateReply(prompt);
+    const reply = await this.llmService.generateReply(prompt);
+    const fallbackUsed = reply.trim() === FALLBACK_REPLY;
 
     await this.queryLogRepository.save(
       this.queryLogRepository.create({
@@ -72,10 +58,10 @@ export class QueryService {
         reply,
         matchedChunkIds: topMatches.map((match) => match.chunk.id),
         similarityScore: bestScore,
-        fallbackUsed: false,
+        fallbackUsed,
       }),
     );
 
-    return { reply, fallback: false };
+    return { reply, fallback: fallbackUsed };
   }
 }

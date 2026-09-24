@@ -20,14 +20,18 @@ export class KnowledgeChunk {
   content: string;
 
   @Column({ type: 'json', nullable: true })
-  embedding: Record<string, unknown> | null;
+  embedding: number[] | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @ManyToOne(() => KnowledgeSource, (knowledgeSource) => knowledgeSource.chunks, {
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(
+    () => KnowledgeSource,
+    (knowledgeSource) => knowledgeSource.chunks,
+    {
+      onDelete: 'CASCADE',
+    },
+  )
   @JoinColumn({ name: 'source_id' })
   source: KnowledgeSource;
 }
