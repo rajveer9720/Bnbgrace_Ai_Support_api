@@ -16,6 +16,6 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_NAME ?? 'ai_support_bnbgrace',
   entities: [User, KnowledgeSource, KnowledgeChunk, QueryLog],
   migrations: ['src/migrations/**/*.ts'],
-  synchronize: false,
+  synchronize: process.env.DB_SYNCHRONIZE?.toLowerCase() === 'true',
   logging: false,
 });

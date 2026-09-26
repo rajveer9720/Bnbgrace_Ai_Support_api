@@ -7,32 +7,37 @@ import { AppService } from './app.service.js';
 import { AuthModule } from './auth/auth.module.js';
 import { KnowledgeModule } from './knowledge/knowledge.module.js';
 import { QueryModule } from './query/query.module.js';
-import { LlmModule } from './llm/llm.module.js';
 import { getDatabaseConfig } from './common/app.config.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
+const configModule = ConfigModule.forRoot({
+  isGlobal: true,
+  envFilePath: '.env',
+});
+export const isObserveEnabled =
+  process.env.OBSERVE_ENABLED?.toLowerCase() === 'true';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env',
-    }),
+    configModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) =>
         getDatabaseConfig(configService),
     }),
-    ObserveModule.forRoot({
-      appKey: 'YOUR_APP_KEY',
-      appSecret: 'YOUR_APP_SECRET',
-      serviceId: 'backend',
-    }),
+    ...(isObserveEnabled
+      ? [
+          ObserveModule.forRoot({
+            appKey: process.env.OBSERVE_APP_KEY ?? '',
+            appSecret: process.env.OBSERVE_APP_SECRET ?? '',
+            serviceId: process.env.OBSERVE_SERVICE_ID ?? 'backend',
+          }),
+        ]
+      : []),
     AuthModule,
     KnowledgeModule,
     QueryModule,
-    LlmModule,
   ],
   controllers: [AppController],
   providers: [AppService],

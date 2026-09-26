@@ -6,6 +6,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import type { Relation } from 'typeorm';
 import { KnowledgeSource } from './knowledge-source.entity.js';
 
 @Entity('knowledge_chunks')
@@ -33,5 +34,5 @@ export class KnowledgeChunk {
     },
   )
   @JoinColumn({ name: 'source_id' })
-  source: KnowledgeSource;
+  source: Relation<KnowledgeSource>;
 }

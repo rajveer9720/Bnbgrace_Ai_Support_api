@@ -5,6 +5,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import type { Relation } from 'typeorm';
 import { KnowledgeChunk } from './knowledge-chunk.entity.js';
 
 @Entity('knowledge_sources')
@@ -28,5 +29,5 @@ export class KnowledgeSource {
   createdAt: Date;
 
   @OneToMany(() => KnowledgeChunk, (knowledgeChunk) => knowledgeChunk.source)
-  chunks: KnowledgeChunk[];
+  chunks: Relation<KnowledgeChunk[]>;
 }

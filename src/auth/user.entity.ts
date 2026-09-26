@@ -5,6 +5,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import type { Relation } from 'typeorm';
 import { QueryLog } from '../query/query-log.entity.js';
 
 @Entity('users')
@@ -29,5 +30,5 @@ export class User {
   createdAt: Date;
 
   @OneToMany(() => QueryLog, (queryLog) => queryLog.user)
-  queryLogs: QueryLog[];
+  queryLogs: Relation<QueryLog[]>;
 }

@@ -6,6 +6,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import type { Relation } from 'typeorm';
 import { User } from '../auth/user.entity.js';
 
 @Entity('query_logs')
@@ -36,5 +37,5 @@ export class QueryLog {
 
   @ManyToOne(() => User, (user) => user.queryLogs, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user: Relation<User>;
 }

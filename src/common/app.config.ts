@@ -15,7 +15,8 @@ export const getDatabaseConfig = (
   password: configService.get<string>('DB_PASS') ?? '',
   database: configService.get<string>('DB_NAME') ?? 'ai_support_bnbgrace',
   entities: [User, KnowledgeSource, KnowledgeChunk, QueryLog],
-  synchronize: false,
+  synchronize:
+    configService.get<string>('DB_SYNCHRONIZE')?.toLowerCase() === 'true',
   migrationsRun: false,
   logging: false,
   extra: {

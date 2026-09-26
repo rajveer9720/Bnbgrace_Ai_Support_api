@@ -5,7 +5,7 @@ Set these values in `.env` for OpenAI testing:
 ```dotenv
 LLM_PROVIDER=openai
 OPENAI_API_KEY=your_actual_api_key
-OPENAI_MODEL=gpt-4.1-mini
+OPENAI_MODEL=gpt-4o-mini
 OPENAI_EMBEDDING_MODEL=text-embedding-3-small
 ```
 
@@ -35,6 +35,6 @@ OLLAMA_EMBEDDING_MODEL=nomic-embed-text
 
 Restart the backend. OpenAI code can remain; it is not called in Ollama mode. The OpenAI key can be removed from `.env` when it is no longer needed.
 
-Before using knowledge retrieval after changing providers or embedding models, regenerate every stored chunk embedding using `LlmService.getEmbedding(chunk.content)`. This project currently has no ingestion or reindex endpoint. Embeddings from different models must not be mixed, even if their lengths match.
+Before using knowledge retrieval after changing providers or embedding models, regenerate every stored chunk embedding using the injected `LlmProvider.getEmbedding(chunk.content)`. This project currently has no ingestion or reindex endpoint. Embeddings from different models must not be mixed, even if their lengths match.
 
 OpenAI uses the [Responses API](https://developers.openai.com/api/reference/cli/resources/responses/methods/create) for replies and the [Embeddings API](https://developers.openai.com/api/docs/guides/embeddings) for vectors. Model names are configurable. Requests time out after 60 seconds; provider failures do not automatically send data to another provider.

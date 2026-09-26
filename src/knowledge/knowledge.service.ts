@@ -1,11 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { LlmService } from '../llm/llm.service.js';
+import { Inject, Injectable } from '@nestjs/common';
+import { LLM_PROVIDER } from '../llm/llm-provider.interface.js';
+import type { LlmProviderWithModels } from '../llm/llm-provider.interface.js';
 
 @Injectable()
 export class KnowledgeService {
-  constructor(private readonly llmService: LlmService) {}
+  constructor(
+    @Inject(LLM_PROVIDER)
+    private readonly llmProvider: LlmProviderWithModels,
+  ) {}
 
   async getKnowledgeBase() {
-    return this.llmService.getModels();
+    return this.llmProvider.getModels();
   }
 }
