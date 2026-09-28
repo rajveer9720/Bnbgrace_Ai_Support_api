@@ -18,12 +18,17 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(email: string, password: string): Promise<{ accessToken: string }> {
+  async register(
+    email: string,
+    password: string,
+  ): Promise<{ accessToken: string }> {
     if (!email || !password) {
       throw new BadRequestException('Email and password are required');
     }
 
-    const existingUser = await this.userRepository.findOne({ where: { email } });
+    const existingUser = await this.userRepository.findOne({
+      where: { email },
+    });
     if (existingUser) {
       throw new BadRequestException('User already exists');
     }
@@ -37,13 +42,7 @@ export class AuthService {
 
     await this.userRepository.save(user);
 
-    return {
-      accessToken: this.jwtService.sign({
-        sub: user.id,
-        email: user.email,
-        role: user.role,
-      }),
-    };
+    return this.createAccessToken(user);
   }
 
   async login(loginDto: LoginDto): Promise<{ accessToken: string }> {
@@ -55,11 +54,18 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const isValidPassword = await bcrypt.compare(loginDto.password, user.passwordHash);
+    const isValidPassword = await bcrypt.compare(
+      loginDto.password,
+      user.passwordHash,
+    );
     if (!isValidPassword) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    return this.createAccessToken(user);
+  }
+
+  private createAccessToken(user: User): { accessToken: string } {
     return {
       accessToken: this.jwtService.sign({
         sub: user.id,

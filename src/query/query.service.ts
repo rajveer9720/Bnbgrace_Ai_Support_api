@@ -6,7 +6,7 @@ import { KnowledgeChunk } from '../knowledge/knowledge-chunk.entity.js';
 import { QueryLog } from './query-log.entity.js';
 import { LLM_PROVIDER } from '../llm/llm-provider.interface.js';
 import type { LlmProvider } from '../llm/llm-provider.interface.js';
-import { getTopMatches } from './cosine-similarity.util.js';
+import { getTopMatches } from '../utils/cosine-similarity.util.js';
 
 const FALLBACK_REPLY = 'This query requires supervisor verification.';
 
@@ -44,21 +44,21 @@ export class QueryService {
         : 0.25;
 
     if (bestScore < threshold) {
-      await this.queryLogRepository.save(
-        this.queryLogRepository.create({
-          userId,
-          question,
-          reply: FALLBACK_REPLY,
-          matchedChunkIds: topMatches.map((match) => match.chunk.id),
-          similarityScore: bestScore,
-          fallbackUsed: true,
-        }),
-      );
+      await this.logReply({
+        userId,
+        question,
+        reply: FALLBACK_REPLY,
+        matchedChunkIds: topMatches.map((match) => match.chunk.id),
+        similarityScore: bestScore,
+        fallbackUsed: true,
+      });
 
       return { reply: FALLBACK_REPLY, fallback: true };
     }
 
-    const relevantMatches = topMatches.filter((match) => match.score >= threshold);
+    const relevantMatches = topMatches.filter(
+      (match) => match.score >= threshold,
+    );
     const context = relevantMatches
       .map((match) => match.chunk.content)
       .join('\n\n');
@@ -66,17 +66,29 @@ export class QueryService {
     const reply = await this.llmProvider.generateReply(prompt);
     const fallbackUsed = reply.trim() === FALLBACK_REPLY;
 
-    await this.queryLogRepository.save(
-      this.queryLogRepository.create({
-        userId,
-        question,
-        reply,
-        matchedChunkIds: relevantMatches.map((match) => match.chunk.id),
-        similarityScore: bestScore,
-        fallbackUsed,
-      }),
-    );
+    await this.logReply({
+      userId,
+      question,
+      reply,
+      matchedChunkIds: relevantMatches.map((match) => match.chunk.id),
+      similarityScore: bestScore,
+      fallbackUsed,
+    });
 
     return { reply, fallback: fallbackUsed };
+  }
+
+  private async logReply(
+    entry: Pick<
+      QueryLog,
+      | 'userId'
+      | 'question'
+      | 'reply'
+      | 'matchedChunkIds'
+      | 'similarityScore'
+      | 'fallbackUsed'
+    >,
+  ): Promise<void> {
+    await this.queryLogRepository.save(this.queryLogRepository.create(entry));
   }
 }

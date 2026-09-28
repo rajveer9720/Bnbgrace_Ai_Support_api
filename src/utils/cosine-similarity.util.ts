@@ -31,7 +31,9 @@ export function getTopMatches<T extends { embedding: number[] | null }>(
   topN = 5,
 ): ScoredChunk<T>[] {
   return chunks
-    .filter((chunk) => Array.isArray(chunk.embedding) && chunk.embedding.length > 0)
+    .filter(
+      (chunk) => Array.isArray(chunk.embedding) && chunk.embedding.length > 0,
+    )
     .map((chunk) => ({
       chunk,
       score: cosineSimilarity(queryEmbedding, chunk.embedding as number[]),
