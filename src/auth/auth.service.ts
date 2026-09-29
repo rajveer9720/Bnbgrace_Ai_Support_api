@@ -22,9 +22,7 @@ export class AuthService {
     email: string,
     password: string,
   ): Promise<{ accessToken: string }> {
-    if (!email || !password) {
-      throw new BadRequestException('Email and password are required');
-    }
+    this.validateCredentials(email, password);
 
     const existingUser = await this.userRepository.findOne({
       where: { email },
@@ -46,6 +44,7 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto): Promise<{ accessToken: string }> {
+    this.validateCredentials(loginDto?.email, loginDto?.password);
     const user = await this.userRepository.findOne({
       where: { email: loginDto.email },
     });
@@ -63,6 +62,17 @@ export class AuthService {
     }
 
     return this.createAccessToken(user);
+  }
+
+  private validateCredentials(email: unknown, password: unknown): void {
+    if (
+      typeof email !== 'string' ||
+      !email.trim() ||
+      typeof password !== 'string' ||
+      !password.length
+    ) {
+      throw new BadRequestException('Email and password are required');
+    }
   }
 
   private createAccessToken(user: User): { accessToken: string } {

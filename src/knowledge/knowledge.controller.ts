@@ -43,7 +43,11 @@ export class KnowledgeController {
   )
   upload(
     @UploadedFile()
-    file: { originalname: string; mimetype: string; buffer: Buffer },
+    file: {
+      originalname: string;
+      mimetype: string;
+      buffer: Buffer;
+    },
   ) {
     return this.knowledgeService.addPdf(file);
   }
@@ -51,5 +55,10 @@ export class KnowledgeController {
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.knowledgeService.remove(id);
+  }
+
+  @Post(':id/reindex')
+  reindex(@Param('id', ParseIntPipe) id: number) {
+    return this.knowledgeService.reindex(id);
   }
 }

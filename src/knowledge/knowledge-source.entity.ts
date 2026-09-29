@@ -25,6 +25,24 @@ export class KnowledgeSource {
   @Column({ name: 'original_ref', length: 500 })
   originalRef: string;
 
+  @Column({
+    name: 'embedding_model',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  embeddingModel: string | null;
+
+  @Column({
+    name: 'content_hash',
+    type: 'varchar',
+    length: 64,
+    nullable: true,
+    unique: true,
+    select: false,
+  })
+  contentHash: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

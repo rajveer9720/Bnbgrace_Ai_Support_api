@@ -11,6 +11,10 @@ import type { LlmProviderWithModels } from './llm-provider.interface.js';
 export class OllamaService implements LlmProviderWithModels {
   constructor(private readonly configService: ConfigService) {}
 
+  get embeddingModel(): string {
+    return `ollama:${this.configService.get<string>('OLLAMA_EMBEDDING_MODEL') ?? 'nomic-embed-text'}`;
+  }
+
   private get baseUrl(): string {
     return (
       this.configService.get<string>('OLLAMA_URL') ?? 'http://localhost:11434'
@@ -57,13 +61,16 @@ export class OllamaService implements LlmProviderWithModels {
     return embedding;
   }
 
-  async generateReply(prompt: string): Promise<string> {
+  async generateReply(prompt: string, instructions?: string): Promise<string> {
     this.validateInput(prompt);
     const data = await this.post<{ message?: { content?: string } }>(
       '/api/chat',
       {
         model: this.configService.get<string>('OLLAMA_MODEL') ?? 'llama3.1:8b',
-        messages: [{ role: 'user', content: prompt }],
+        messages: [
+          ...(instructions ? [{ role: 'system', content: instructions }] : []),
+          { role: 'user', content: prompt },
+        ],
         stream: false,
       },
     );

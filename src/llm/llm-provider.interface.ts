@@ -1,6 +1,7 @@
 export interface LlmProvider {
+  readonly embeddingModel: string;
   getEmbedding(text: string): Promise<number[]>;
-  generateReply(prompt: string): Promise<string>;
+  generateReply(prompt: string, instructions?: string): Promise<string>;
 }
 
 export interface LlmProviderWithModels extends LlmProvider {

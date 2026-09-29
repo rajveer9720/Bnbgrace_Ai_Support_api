@@ -20,6 +20,10 @@ interface OpenAiResponse {
 export class OpenAiService implements LlmProviderWithModels {
   constructor(private readonly configService: ConfigService) {}
 
+  get embeddingModel(): string {
+    return `openai:${this.configService.get<string>('OPENAI_EMBEDDING_MODEL') ?? 'text-embedding-3-small'}`;
+  }
+
   private get headers(): Record<string, string> {
     const key = this.configService.get<string>('OPENAI_API_KEY')?.trim();
     if (!key) {
@@ -77,13 +81,14 @@ export class OpenAiService implements LlmProviderWithModels {
     return embedding;
   }
 
-  async generateReply(prompt: string): Promise<string> {
+  async generateReply(prompt: string, instructions?: string): Promise<string> {
     this.validateInput(prompt);
     const data = await this.post<OpenAiResponse>(
       'https://api.openai.com/v1/responses',
       {
         model: this.configService.get<string>('OPENAI_MODEL') ?? 'gpt-4o-mini',
         input: prompt,
+        instructions,
         store: false,
       },
     );

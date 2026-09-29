@@ -1,9 +1,9 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import type { Request } from 'express';
 import { QueryService } from './query.service.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import { Roles } from '../auth/roles.decorator.js';
+import type { AuthenticatedRequest } from '../common/interfaces/authenticated-request.interface.js';
 
 @Controller('query')
 export class QueryController {
@@ -11,8 +11,8 @@ export class QueryController {
 
   @Post()
   @UseGuards(AuthGuard('jwt'))
-  async ask(@Body('prompt') prompt: string) {
-    return this.queryService.ask(prompt);
+  async ask(@Body('prompt') prompt: string, @Req() req: AuthenticatedRequest) {
+    return this.queryService.ask(prompt, req.user.id);
   }
 }
 
@@ -23,8 +23,10 @@ export class AgentController {
   @Post('generate-reply')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('agent', 'admin')
-  async generateReply(@Body('question') question: string, @Req() req: Request) {
-    const userId = (req.user as { id: number }).id;
-    return this.queryService.generateReply(question, userId);
+  async generateReply(
+    @Body('question') question: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.queryService.generateReply(question, req.user.id);
   }
 }

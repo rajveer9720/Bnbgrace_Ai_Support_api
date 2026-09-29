@@ -1,6 +1,15 @@
 const CHUNK_LENGTH = 1_200;
 const CHUNK_OVERLAP = 150;
 
+function decodeCodePoint(code: number): string {
+  return Number.isInteger(code) &&
+    code > 0 &&
+    code <= 0x10ffff &&
+    !(code >= 0xd800 && code <= 0xdfff)
+    ? String.fromCodePoint(code)
+    : '\uFFFD';
+}
+
 export function chunkText(text: string): string[] {
   const chunks: string[] = [];
   let start = 0;
@@ -33,11 +42,9 @@ export function cleanHtml(html: string): string {
         '\n',
       )
       .replace(/<[^>]+>/g, ' ')
-      .replace(/&#(\d+);/g, (_, code: string) =>
-        String.fromCodePoint(Number(code)),
-      )
+      .replace(/&#(\d+);/g, (_, code: string) => decodeCodePoint(Number(code)))
       .replace(/&#x([\da-f]+);/gi, (_, code: string) =>
-        String.fromCodePoint(Number.parseInt(code, 16)),
+        decodeCodePoint(Number.parseInt(code, 16)),
       )
       .replace(/&nbsp;/gi, ' ')
       .replace(/&amp;/gi, '&')
